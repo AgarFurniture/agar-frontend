@@ -1529,6 +1529,9 @@ body {
       <div class="sidebar-item chip" data-mat="polylac" onclick="toggleFilter(this)">Polylac (Gizir)</div>
       <div class="sidebar-item chip" data-mat="polyback" onclick="toggleFilter(this)">Polyback</div>
       <div class="sidebar-item chip" data-mat="alvic" onclick="toggleFilter(this)">German Alvic</div>
+       <div class="sidebar-item chip" data-mat="countersandwich" onclick="toggleFilter(this)">Counter Sandwich</div>
+<div class="sidebar-item chip" data-mat="counter" onclick="toggleFilter(this)">Counter</div>
+<div class="sidebar-item chip" data-mat="mdfturkey" onclick="toggleFilter(this)">MDF Turkey</div>
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section-title">حسب النوع</div>
@@ -1671,6 +1674,9 @@ body {
   <label class="mat-cb"><input type="checkbox" value="polylac"/><span class="dot"></span>Polylac (Gizir)</label>
   <label class="mat-cb"><input type="checkbox" value="polyback"/><span class="dot"></span>Polyback</label>
   <label class="mat-cb"><input type="checkbox" value="alvic"/><span class="dot"></span>German Alvic</label>
+   <label class="mat-cb"><input type="checkbox" value="countersandwich"/><span class="dot"></span>Counter Sandwich</label>
+<label class="mat-cb"><input type="checkbox" value="counter"/><span class="dot"></span>Counter</label>
+<label class="mat-cb"><input type="checkbox" value="mdfturkey"/><span class="dot"></span>MDF Turkey</label>
 </div>
 <label class="form-label" style="margin-top:.8rem">نوع المنتج</label>
 <div class="mat-checkboxes" id="upload-types">
@@ -1822,7 +1828,7 @@ let currentFileTarget = 'contract';
 let currentStageTarget= null;
 let selectedStatus    = 'ميتنج';
 let activeFilters = new Set(['all']);
-let allMats = ['pvc','hpl','uvlac','glossmax','mattplus','polylac','polyback','alvic'];
+let allMats = ['pvc','hpl','uvlac','glossmax','mattplus','polylac','polyback','alvic','countersandwich','counter','mdfturkey'];
 let activeTypes = new Set(['all']);
 let allTypes = ['مطابخ','غرف نوم','دريسينج','وحدات TV','وحدات حمام','ديكور','ريسبشن','ركن قهوه'];
 let verifyData        = { userId: null };
@@ -1832,7 +1838,8 @@ let contractFilesArr  = []; // [{file, type, name}]
 
 const MATS_AR = {
   pvc:'PVC', hpl:'HPL', uvlac:'UV Lac', glossmax:'GlossMax',
-  mattplus:'Matt Plus', polylac:'Polylac (Gizir)', polyback:'Polyback', alvic:'German Alvic'
+  mattplus:'Matt Plus', polylac:'Polylac (Gizir)', polyback:'Polyback', alvic:'German Alvic',
+  countersandwich:'Counter Sandwich', counter:'Counter', mdfturkey:'MDF Turkey'
 };
 const TYPES_AR = ['مطابخ','غرف نوم','دريسينج','وحدات TV','وحدات حمام','ديكور','ريسبشن','ركن قهوه'];
 const STATUS_CLS = { ميتنج:'s-meeting', متابعة:'s-followup', معاينة:'s-inspection-status', مرفوض:'s-rejected' };
