@@ -1789,6 +1789,55 @@ body {
     <button class="btn-primary" id="acc-submit-btn" onclick="submitAcc()">نشر</button>
   </div>
 </div>
+   <!-- Edit Post Modal -->
+<div class="modal-overlay" id="edit-post-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('edit-post-modal')">✕</button>
+    <div class="modal-title">✏️ تعديل المنشور</div>
+
+    <label class="form-label">المواد المستخدمة</label>
+    <div class="mat-checkboxes" id="edit-post-mats">
+      <label class="mat-cb"><input type="checkbox" value="pvc"/><span class="dot"></span>PVC</label>
+      <label class="mat-cb"><input type="checkbox" value="hpl"/><span class="dot"></span>HPL</label>
+      <label class="mat-cb"><input type="checkbox" value="uvlac"/><span class="dot"></span>UV Lac</label>
+      <label class="mat-cb"><input type="checkbox" value="glossmax"/><span class="dot"></span>GlossMax</label>
+      <label class="mat-cb"><input type="checkbox" value="mattplus"/><span class="dot"></span>Matt Plus</label>
+      <label class="mat-cb"><input type="checkbox" value="polylac"/><span class="dot"></span>Polylac (Gizir)</label>
+      <label class="mat-cb"><input type="checkbox" value="polyback"/><span class="dot"></span>Polyback</label>
+      <label class="mat-cb"><input type="checkbox" value="alvic"/><span class="dot"></span>German Alvic</label>
+      <label class="mat-cb"><input type="checkbox" value="countersandwich"/><span class="dot"></span>Counter Sandwich</label>
+      <label class="mat-cb"><input type="checkbox" value="counter"/><span class="dot"></span>Counter</label>
+      <label class="mat-cb"><input type="checkbox" value="mdfturkey"/><span class="dot"></span>MDF Turkey</label>
+    </div>
+
+    <label class="form-label" style="margin-top:.8rem">نوع المنتج</label>
+    <div class="mat-checkboxes" id="edit-post-types">
+      <label class="mat-cb"><input type="checkbox" value="مطابخ"/><span class="dot"></span>مطابخ</label>
+      <label class="mat-cb"><input type="checkbox" value="غرف نوم"/><span class="dot"></span>غرف نوم</label>
+      <label class="mat-cb"><input type="checkbox" value="دريسينج"/><span class="dot"></span>دريسينج</label>
+      <label class="mat-cb"><input type="checkbox" value="وحدات TV"/><span class="dot"></span>وحدات TV</label>
+      <label class="mat-cb"><input type="checkbox" value="وحدات حمام"/><span class="dot"></span>وحدات حمام</label>
+      <label class="mat-cb"><input type="checkbox" value="ديكور"/><span class="dot"></span>ديكور</label>
+      <label class="mat-cb"><input type="checkbox" value="ريسبشن"/><span class="dot"></span>ريسبشن</label>
+      <label class="mat-cb"><input type="checkbox" value="ركن قهوه"/><span class="dot"></span>ركن قهوه</label>
+    </div>
+
+    <label class="form-label" style="margin-top:.8rem">الصور الحالية</label>
+    <div id="edit-post-current-imgs" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem"></div>
+
+    <label class="form-label">إضافة صور جديدة</label>
+    <div class="upload-area" onclick="document.getElementById('edit-post-file-input').click()">
+      <input type="file" id="edit-post-file-input" accept="image/*" multiple onchange="previewEditPostImages(this)"/>
+      <div class="u-icon">🖼️</div><p>اضغط لاختيار صور</p>
+    </div>
+    <div id="edit-post-new-imgs" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem"></div>
+
+    <label class="form-label">الوصف</label>
+    <textarea class="modal-textarea" id="edit-post-desc" placeholder="وصف العمل..."></textarea>
+
+    <button class="btn-primary" id="edit-post-submit-btn" onclick="submitEditPost()">حفظ التعديلات</button>
+  </div>
+</div>
 <!-- ═══ LIGHTBOX ═══ -->
 <div class="lightbox" id="lightbox">
   <button class="lightbox-close" onclick="closeLightbox()">✕</button>
@@ -1869,6 +1918,113 @@ function showToast(msg, type = '') {
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
+
+
+   // ═══ EDIT POST ═══
+let editingPostId = null;
+let editPostNewFiles = [];
+let editPostRemovedPublicIds = [];
+
+function openEditPostModal(id) {
+  const p = posts.find(x => x._id === id);
+  if (!p) return;
+  editingPostId = id;
+  editPostNewFiles = [];
+  editPostRemovedPublicIds = [];
+
+  // مواد
+  document.querySelectorAll('#edit-post-mats .mat-cb').forEach(l => {
+    const v = l.querySelector('input').value;
+    const ok = (p.mats||[]).includes(v);
+    l.classList.toggle('checked', ok);
+    l.querySelector('input').checked = ok;
+  });
+
+  // أنواع
+  document.querySelectorAll('#edit-post-types .mat-cb').forEach(l => {
+    const v = l.querySelector('input').value;
+    const ok = (p.types||[]).includes(v);
+    l.classList.toggle('checked', ok);
+    l.querySelector('input').checked = ok;
+  });
+
+  // وصف
+  document.getElementById('edit-post-desc').value = p.desc || '';
+
+  // الصور الحالية
+  const imgWrap = document.getElementById('edit-post-current-imgs');
+  imgWrap.innerHTML = (p.imgs||[]).map(img => `
+    <div style="position:relative;display:inline-block" id="eimg-${img.publicId?.replace(/\//g,'_')}">
+      <img src="${img.url}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,.2)">
+      <button onclick="removeEditPostImg('${img.publicId}')"
+        style="position:absolute;top:-6px;left:-6px;background:#e74c3c;border:none;color:#fff;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+  `).join('');
+
+  document.getElementById('edit-post-new-imgs').innerHTML = '';
+  document.getElementById('edit-post-file-input').value = '';
+
+  // init mat-cb click handlers للـ modal الجديد
+  document.querySelectorAll('#edit-post-mats .mat-cb, #edit-post-types .mat-cb').forEach(label => {
+    label.onclick = () => {
+      const cb = label.querySelector('input');
+      cb.checked = !cb.checked;
+      label.classList.toggle('checked', cb.checked);
+    };
+  });
+
+  openModal('edit-post-modal');
+}
+
+function removeEditPostImg(publicId) {
+  editPostRemovedPublicIds.push(publicId);
+  const safeId = publicId.replace(/\//g,'_');
+  document.getElementById('eimg-' + safeId)?.remove();
+}
+
+function previewEditPostImages(input) {
+  editPostNewFiles = [...input.files];
+  const prev = document.getElementById('edit-post-new-imgs');
+  prev.innerHTML = '';
+  editPostNewFiles.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      prev.innerHTML += `<img src="${e.target.result}" style="width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid rgba(201,168,76,.2)">`;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function submitEditPost() {
+  const mats = [...document.querySelectorAll('#edit-post-mats .mat-cb.checked')]
+    .map(l => l.querySelector('input').value);
+  if (!mats.length) return showToast('اختار مادة واحدة على الأقل', 'error');
+
+  const types = [...document.querySelectorAll('#edit-post-types .mat-cb.checked')]
+    .map(l => l.querySelector('input').value);
+  const desc = document.getElementById('edit-post-desc').value.trim();
+
+  setLoading('edit-post-submit-btn', true, 'جاري الحفظ...');
+  try {
+    // ارفع الصور الجديدة على Cloudinary
+    const newImgs = editPostNewFiles.length
+      ? await uploadImagesToCloudinary(editPostNewFiles, 'agar-furniture/posts')
+      : [];
+
+    const data = await apiPut('/posts/' + editingPostId, {
+      mats, types, desc,
+      imgs: newImgs,
+      removeImgs: editPostRemovedPublicIds,
+    });
+
+    const idx = posts.findIndex(x => x._id === editingPostId);
+    if (idx > -1) posts[idx] = data.post;
+    closeModal('edit-post-modal');
+    renderPosts();
+    showToast('تم التعديل ✓', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+  finally { setLoading('edit-post-submit-btn', false, 'حفظ التعديلات'); }
+}
 // ═══════════════════════════════════════════════════════════════
 // API
 // ═══════════════════════════════════════════════════════════════
