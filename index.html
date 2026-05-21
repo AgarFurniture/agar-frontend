@@ -2478,7 +2478,11 @@ function renderPosts() {
         ${p.desc ? `<div class="post-desc" style="margin-top:.5rem">${escHtml(p.desc)}</div>` : ''}
       </div>
       ${buildImgGrid(p.imgs, '🪑')}
-${(isAdmin || currentUser?.permissions?.works?.delete) ? `<button class="post-del-btn" onclick="deletePost('${p._id}')">🗑 حذف</button>` : ''}    </div>
+${(isAdmin || currentUser?.permissions?.works?.delete) ? `
+  <button class="post-del-btn" onclick="deletePost('${p._id}')">🗑 حذف</button>
+  <button class="post-del-btn" onclick="openEditPostModal('${p._id}')" 
+    style="border-color:rgba(201,168,76,.3);color:var(--gold-light)">✏️ تعديل</button>
+` : ''}   </div>
   `).join('');
 }
 function previewPostImages(input) {
