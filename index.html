@@ -2498,16 +2498,21 @@ async function submitPost() {
   const mats = [...document.querySelectorAll('#upload-mats .mat-cb.checked')]
     .map(l => l.querySelector('input').value);
   if (!mats.length) return showToast('اختار مادة واحدة على الأقل', 'error');
+
   const types = [...document.querySelectorAll('#upload-types .mat-cb.checked')]
     .map(l => l.querySelector('input').value);
-  const fd = new FormData();
-  fd.append('mats', JSON.stringify(mats));
-  fd.append('types', JSON.stringify(types));
-  fd.append('desc', document.getElementById('upload-desc').value.trim());
-  postImageFiles.forEach(f => fd.append('images', f));
-  setLoading('post-submit-btn', true, 'نشر');
+  const desc = document.getElementById('upload-desc').value.trim();
+
+  if (!postImageFiles.length) return showToast('اختار صورة واحدة على الأقل', 'error');
+
+  setLoading('post-submit-btn', true, 'جاري الرفع...');
   try {
-    const data = await apiForm('POST', '/posts', fd);
+    // 1) ارفع الصور على Cloudinary مباشرة
+    const imgs = await uploadImagesToCloudinary(postImageFiles, 'agar-furniture/posts');
+
+    // 2) ابعت للباك الـ URLs بس (JSON خفيف)
+    const data = await apiPost('/posts', { mats, types, desc, imgs });
+
     posts.unshift(data.post);
     closeModal('upload-modal');
     resetUploadModal();
@@ -3258,13 +3263,14 @@ function previewAccImages(input) {
 async function submitAcc() {
   const type = document.getElementById('acc-type-input').value.trim();
   if (!type) return showToast('ادخل نوع الاكسسوار', 'error');
-  const fd = new FormData();
-  fd.append('type', type);
-  fd.append('desc', document.getElementById('acc-upload-desc').value.trim());
-  accImageFiles.forEach(f => fd.append('images', f));
-  setLoading('acc-submit-btn', true, 'نشر');
+
+  setLoading('acc-submit-btn', true, 'جاري الرفع...');
   try {
-    const data = await apiForm('POST', '/accessories', fd);
+    const imgs = await uploadImagesToCloudinary(accImageFiles, 'agar-furniture/accessories');
+    const desc = document.getElementById('acc-upload-desc').value.trim();
+
+    const data = await apiPost('/accessories', { type, desc, imgs });
+
     accessories.unshift(data.accessory);
     closeModal('acc-upload-modal');
     document.getElementById('acc-imgs-preview').innerHTML = '';
@@ -3303,6 +3309,32 @@ async function deleteAcc(id) {
 // ═══════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════
+
+
+   // ── رفع صور لـ Cloudinary مباشرة (Unsigned) ──────────────────
+const CLOUDINARY_CLOUD = 'c-7a4357f75e5162ededcf0918fdc8bd'; // cloud name بتاعك
+const CLOUDINARY_PRESET = 'agar_unsigned';
+
+async function uploadImagesToCloudinary(files, folder) {
+  if (!files.length) return [];
+  const uploads = files.map(file => {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', CLOUDINARY_PRESET);
+    fd.append('folder', folder);
+    return fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+      method: 'POST',
+      body: fd
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) throw new Error(data.error.message);
+      return { url: data.secure_url, publicId: data.public_id };
+    });
+  });
+  return Promise.all(uploads);
+}
+   
    function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
